@@ -5,6 +5,7 @@ public static class BuildScript
 {
     public static void BuildWebGL()
     {
+        PlayerSettings.WebGL.template = "APPLICATION:PWA";
         var options = new BuildPlayerOptions
         {
             scenes = new[] { "Assets/Scenes/SampleScene.unity" },
