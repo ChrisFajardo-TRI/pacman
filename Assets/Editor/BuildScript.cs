@@ -21,5 +21,10 @@ public static class BuildScript
             Debug.LogError($"Build failed: {report.summary.result}");
             EditorApplication.Exit(1);
         }
+
+        // PWA manifest points at the template's unity-logo icons; overwrite with ours.
+        foreach (var name in new[] { "unity-logo-dark.png", "unity-logo-light.png" })
+            System.IO.File.Copy("BuildAssets/pwa-icon-144.png",
+                $"Builds/WebGL/TemplateData/icons/{name}", true);
     }
 }
