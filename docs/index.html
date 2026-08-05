@@ -7,6 +7,33 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <link rel="manifest" href="manifest.webmanifest">
+  <script id="audio-unlock">
+      // iOS home-screen PWAs keep AudioContext suspended and Unity's resume
+      // hook doesn't always fire in standalone mode. Track every context the
+      // engine creates and resume on touch/click and on returning from background.
+      (function () {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        var ctxs = [];
+        function Wrapped() {
+          var c = new (Function.prototype.bind.apply(AC, [null].concat([].slice.call(arguments))))();
+          ctxs.push(c);
+          return c;
+        }
+        Wrapped.prototype = AC.prototype;
+        window.AudioContext = Wrapped;
+        if (window.webkitAudioContext) window.webkitAudioContext = Wrapped;
+        function resumeAll() {
+          ctxs.forEach(function (c) { if (c.state === 'suspended') c.resume(); });
+        }
+        ['touchstart', 'touchend', 'click'].forEach(function (e) {
+          document.addEventListener(e, resumeAll, true);
+        });
+        document.addEventListener('visibilitychange', function () {
+          if (!document.hidden) resumeAll();
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="unity-container">
