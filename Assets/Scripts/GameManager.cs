@@ -158,7 +158,9 @@ public class GameManager : MonoBehaviour
     {
         if (gameOver)
         {
-            if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
+            bool restartKey = Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame;
+            bool restartTap = Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame;
+            if (restartKey || restartTap)
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             return;
         }
@@ -366,7 +368,7 @@ public class GameManager : MonoBehaviour
             gameOver = true;
             PlayerPrefs.SetInt("HighScore", highScore);
             PlayerPrefs.Save();
-            ShowMessage("GAME OVER\nPress R to restart", Color.red);
+            ShowMessage("GAME OVER\nPress R or tap to restart", Color.red);
             yield break;
         }
 
