@@ -1,4 +1,4 @@
-const cacheName = "pacman-20260805231122";
+const cacheName = "pacman-20260806005949";
 const contentToCache = [
     "Build/WebGL.loader.js",
     "Build/WebGL.framework.js",
