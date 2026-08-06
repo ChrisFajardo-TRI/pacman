@@ -144,6 +144,7 @@ public class GameManager : MonoBehaviour
         BuildStatic();
         BuildPellets();
         SpawnActors();
+        gameObject.AddComponent<FPVMode>().Init(walls, LevelWallColors[0], pacman, transform);
         FitCamera();
         BuildUI();
         BuildAudio();
@@ -386,8 +387,9 @@ public class GameManager : MonoBehaviour
         Color levelColor = LevelWallColors[(level - 1) % LevelWallColors.Length];
         for (int i = 0; i < 6; i++)
         {
-            foreach (var sr in wallRenderers)
-                sr.color = i % 2 == 0 ? Color.white : levelColor;
+            Color flash = i % 2 == 0 ? Color.white : levelColor;
+            foreach (var sr in wallRenderers) sr.color = flash;
+            FPVMode.Instance.SetWallColor(flash);
             yield return new WaitForSeconds(0.25f);
         }
 
@@ -395,6 +397,7 @@ public class GameManager : MonoBehaviour
         UpdateLevelText();
         Color newColor = LevelWallColors[(level - 1) % LevelWallColors.Length];
         foreach (var sr in wallRenderers) sr.color = newColor;
+        FPVMode.Instance.SetWallColor(newColor);
 
         BuildPellets();
         ResetActors();
@@ -435,10 +438,15 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        // Grouped so FPV billboarding (which spins pellet/fruit sprites toward
+        // the camera) leaves the flat wall sprites alone.
+        var wallsRoot = new GameObject("Walls").transform;
+        wallsRoot.SetParent(transform, false);
+
         Color wallColor = LevelWallColors[0];
         foreach (var cell in walls)
         {
-            var go = Instantiate(wallPrefab, GridToWorld(cell), Quaternion.identity, transform);
+            var go = Instantiate(wallPrefab, GridToWorld(cell), Quaternion.identity, wallsRoot);
             var sr = go.GetComponent<SpriteRenderer>();
             SetWorldSize(sr, 1f);
             sr.color = wallColor;
@@ -447,7 +455,7 @@ public class GameManager : MonoBehaviour
 
         foreach (var cell in doors)
         {
-            var go = Instantiate(wallPrefab, GridToWorld(cell), Quaternion.identity, transform);
+            var go = Instantiate(wallPrefab, GridToWorld(cell), Quaternion.identity, wallsRoot);
             var sr = go.GetComponent<SpriteRenderer>();
             sr.color = new Color(1f, 0.7f, 0.85f);
             SetWorldSize(sr, 1f);
@@ -534,7 +542,7 @@ public class GameManager : MonoBehaviour
         if (blinky == null) blinky = ghosts[0];
     }
 
-    void FitCamera()
+    public void FitCamera()
     {
         var cam = Camera.main;
         if (cam == null) return;

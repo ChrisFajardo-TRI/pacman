@@ -30,10 +30,10 @@ public class PacmanController : GridMover
         var kb = Keyboard.current;
         if (kb != null)
         {
-            if (kb.upArrowKey.isPressed || kb.wKey.isPressed) bufferedDirection = Vector2Int.up;
-            else if (kb.downArrowKey.isPressed || kb.sKey.isPressed) bufferedDirection = Vector2Int.down;
-            else if (kb.leftArrowKey.isPressed || kb.aKey.isPressed) bufferedDirection = Vector2Int.left;
-            else if (kb.rightArrowKey.isPressed || kb.dKey.isPressed) bufferedDirection = Vector2Int.right;
+            if (kb.upArrowKey.isPressed || kb.wKey.isPressed) bufferedDirection = ToWorld(Vector2Int.up);
+            else if (kb.downArrowKey.isPressed || kb.sKey.isPressed) bufferedDirection = ToWorld(Vector2Int.down);
+            else if (kb.leftArrowKey.isPressed || kb.aKey.isPressed) bufferedDirection = ToWorld(Vector2Int.left);
+            else if (kb.rightArrowKey.isPressed || kb.dKey.isPressed) bufferedDirection = ToWorld(Vector2Int.right);
         }
 
         ReadSwipe();
@@ -74,11 +74,25 @@ public class PacmanController : GridMover
         Vector2 delta = touch.position.ReadValue() - swipeStart;
         if (delta.magnitude < SwipeThreshold) return;
 
-        bufferedDirection = Mathf.Abs(delta.x) > Mathf.Abs(delta.y)
+        bufferedDirection = ToWorld(Mathf.Abs(delta.x) > Mathf.Abs(delta.y)
             ? (delta.x > 0 ? Vector2Int.right : Vector2Int.left)
-            : (delta.y > 0 ? Vector2Int.up : Vector2Int.down);
+            : (delta.y > 0 ? Vector2Int.up : Vector2Int.down));
 
         swipeStart = touch.position.ReadValue();
+    }
+
+    // In FPV, input is relative to where the camera faces: up = forward,
+    // down = reverse, left/right = turn. In 2D it's world-absolute as before.
+    static Vector2Int ToWorld(Vector2Int input)
+    {
+        var fpv = FPVMode.Instance;
+        if (fpv == null || !fpv.Active) return input;
+
+        Vector2Int f = fpv.Facing;
+        if (input == Vector2Int.up) return f;
+        if (input == Vector2Int.down) return -f;
+        if (input == Vector2Int.left) return new Vector2Int(-f.y, f.x);
+        return new Vector2Int(f.y, -f.x);
     }
 
     protected override Vector2Int GetDesiredDirection() => bufferedDirection;
